@@ -1,0 +1,154 @@
+{
+    "users": {
+        "admin": [
+            {
+                "email": "admin1@test.com",
+                "password": "Admin@123",
+                "role": "ADMIN",
+                "number": 1
+            },
+            {
+                "email": "admin2@test.com",
+                "password": "Admin@123",
+                "role": "ADMIN",
+                "number": 2
+            },
+            {
+                "email": "admin3@test.com",
+                "password": "Admin@123",
+                "role": "ADMIN",
+                "number": 3
+            },
+            {
+                "email": "admin4@test.com",
+                "password": "Admin@123",
+                "role": "ADMIN",
+                "number": 4
+            },
+            {
+                "email": "admin5@test.com",
+                "password": "Admin@123",
+                "role": "ADMIN",
+                "number": 5
+            },
+            {
+                "email": "admin6@test.com",
+                "password": "Admin@123",
+                "role": "ADMIN",
+                "number": 6
+            },
+            {
+                "email": "admin7@test.com",
+                "password": "Admin@123",
+                "role": "ADMIN",
+                "number": 7
+            },
+            {
+                "email": "admin8@test.com",
+                "password": "Admin@123",
+                "role": "ADMIN",
+                "number": 8
+            }
+        ],
+        "editor": [
+            {
+                "email": "editor1@test.com",
+                "password": "Admin@123",
+                "role": "EDITOR",
+                "number": 1
+            },
+            {
+                "email": "editor2@test.com",
+                "password": "Admin@123",
+                "role": "EDITOR",
+                "number": 2
+            },
+            {
+                "email": "editor3@test.com",
+                "password": "Admin@123",
+                "role": "EDITOR",
+                "number": 3
+            },
+            {
+                "email": "editor4@test.com",
+                "password": "Admin@123",
+                "role": "EDITOR",
+                "number": 4
+            },
+            {
+                "email": "editor5@test.com",
+                "password": "Admin@123",
+                "role": "EDITOR",
+                "number": 5
+            },
+            {
+                "email": "editor6@test.com",
+                "password": "Admin@123",
+                "role": "EDITOR",
+                "number": 6
+            },
+            {
+                "email": "editor7@test.com",
+                "password": "Admin@123",
+                "role": "EDITOR",
+                "number": 7
+            },
+            {
+                "email": "editor8@test.com",
+                "password": "Admin@123",
+                "role": "EDITOR",
+                "number": 8
+            }
+        ],
+        "viewer": [
+            {
+                "email": "viewer1@test.com",
+                "password": "Admin@123",
+                "role": "VIEWER",
+                "number": 1
+            },
+            {
+                "email": "viewer2@test.com",
+                "password": "Admin@123",
+                "role": "VIEWER",
+                "number": 2
+            },
+            {
+                "email": "viewer3@test.com",
+                "password": "Admin@123",
+                "role": "VIEWER",
+                "number": 3
+            },
+            {
+                "email": "viewer4@test.com",
+                "password": "Admin@123",
+                "role": "VIEWER",
+                "number": 4
+            },
+            {
+                "email": "viewer5@test.com",
+                "password": "Admin@123",
+                "role": "VIEWER",
+                "number": 5
+            },
+            {
+                "email": "viewer6@test.com",
+                "password": "Admin@123",
+                "role": "VIEWER",
+                "number": 6
+            },
+            {
+                "email": "viewer7@test.com",
+                "password": "Admin@123",
+                "role": "VIEWER",
+                "number": 7
+            },
+            {
+                "email": "viewer8@test.com",
+                "password": "Admin@123",
+                "role": "VIEWER",
+                "number": 8
+            }
+        ]
+    }
+}

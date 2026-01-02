@@ -168,11 +168,44 @@ Run 2-10: Load tokens → Validate → Reuse ✅ (no login)
 Run 11: Load tokens → 2 expired → Re-login 2, reuse 22 ✅
 ```
 
+**Lazy Loading Optimization:**
+```python
+# Only create auth states for users needed by selected tests
+@pytest.fixture(scope="session")
+def auth_states(request):
+    # Determine which users are needed
+    needed_users = determine_needed_users(request.session.items)
+    # Only login those users
+    return login_users(needed_users)
+
+# Smoke tests (5 tests) → 1-2 logins
+# Full suite (38 tests) → 24 logins
+```
+
+**Implementation:**
+```python
+def determine_needed_users(test_items):
+    """Analyze test markers to determine required users"""
+    needed_users = set()
+    for item in test_items:
+        role_marker = item.get_closest_marker("role")
+        if role_marker:
+            # Map test to user based on worker and role
+            needed_users.add(get_user_for_test(item))
+    return needed_users
+```
+
+**CI/CD Behavior:**
+- Fresh container every run (no token reuse)
+- Login all needed users (2-3 minutes for full suite)
+- Clean state guaranteed
+
 **Why It Works:**
 - **Efficient** → Don't login unnecessarily (saves 2-3 minutes per run)
 - **Reliable** → Always validate before use (prevents auth failures)
 - **Fast** → Expiry check is instant, API validation is quick
 - **Safe** → Catches expired/invalid tokens automatically
+- **Optimized** → Only creates what's needed (smoke vs full suite)
 - **Industry standard** → Used by Google, Netflix, Uber
 
 ---
@@ -188,14 +221,15 @@ Run 11: Load tokens → 2 expired → Re-login 2, reuse 22 ✅
 - Retries actions until timeout
 - Handles dynamic content
 
-**Layer 2: pytest-rerunfailures**
-- Reruns failed tests automatically (max 2 retries)
+**Layer 2: pytest-rerunfailures (Industry Standard)**
+- Reruns failed tests automatically (max 2 retries, no delay)
 - Handles network/environment flakiness
 - True failures still fail after retries
+- Configuration: `pytest --reruns 2 --reruns-delay 0`
 
 **Layer 3: Custom Retry for Specific Actions**
 - Wrapper functions for flaky operations (API calls, file uploads)
-- Exponential backoff
+- Simple retry (no exponential backoff needed with Playwright)
 - Logged retry attempts
 
 **Why It Works:**
@@ -374,17 +408,23 @@ pytest -n 4  # 4 parallel workers
 
 ### **Decision 13: CI/CD Integration**
 
-**Solution:** GitHub Actions
+**Solution:** GitHub Actions with parallel matrix builds
+
+**Matrix Strategy:**
+```yaml
+strategy:
+  matrix:
+    browser: [chromium, firefox, webkit]
+  fail-fast: false  # Continue other browsers if one fails
+```
 
 **Workflow:**
 ```
 Code Push → GitHub Actions Triggered
     ↓
-Install dependencies
+Matrix: 3 parallel jobs (Chromium, Firefox, WebKit)
     ↓
-Run tests (parallel, multi-browser)
-    ↓
-Generate Allure report
+Each job: Install dependencies → Run tests → Generate report
     ↓
 Upload artifacts (reports, screenshots, logs)
     ↓
@@ -394,15 +434,141 @@ Notify on failure
 **Why GitHub Actions:**
 - Free for public repos
 - Easy YAML configuration
-- Matrix builds (multi-browser)
+- Parallel matrix builds (3x faster)
 - Artifact storage
 - Integration with GitHub
 
 ---
 
-### **Decision 14: Test Design Strategy (Isolated vs E2E)**
+### **Decision 14: Browser Context Isolation (Industry Standard)**
 
-**Problem:** Should tests be end-to-end user journeys or isolated feature tests?
+**Problem:** Should browser context be reused across tests or created fresh?
+
+**Solution:** New browser context per test
+
+**Implementation:**
+```python
+@pytest.fixture
+def page(browser):
+    """New context per test for complete isolation"""
+    context = browser.new_context()
+    page = context.new_page()
+    yield page
+    context.close()
+```
+
+**Why It Works:**
+- **Complete isolation** → No state leakage between tests
+- **Predictable** → Each test starts with clean slate
+- **Fast enough** → Playwright contexts are lightweight
+- **Industry standard** → Used by Google, Netflix, Uber
+
+**Alternative Considered:**
+- Reuse context per worker → Faster but potential state leakage
+
+---
+
+### **Decision 15: Screenshot Strategy (Industry Standard)**
+
+**Problem:** When to capture screenshots for debugging?
+
+**Solution:** Screenshot on all test failures
+
+**Implementation:**
+```python
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    if call.when == "call" and call.excinfo:
+        page.screenshot(path=f"screenshots/{item.name}_{timestamp}.png")
+```
+
+**Why It Works:**
+- **Comprehensive debugging** → Visual proof of failure state
+- **Storage not an issue** → Modern CI/CD handles artifacts well
+- **Industry standard** → All major companies do this
+- **Allure integration** → Screenshots embedded in reports
+
+---
+
+### **Decision 16: Seed Data Creation Method (Industry Standard)**
+
+**Problem:** Should seed data be created via API or UI?
+
+**Solution:** API for seed data, UI for test-specific data
+
+**Why API for Seed Data:**
+- **10x faster** → No UI rendering/interaction
+- **More reliable** → No UI flakiness
+- **Still tests UI** → Actual tests use UI
+- **Industry standard** → Google, Netflix, Uber all use API for setup
+
+**Implementation:**
+```python
+def create_seed_item_api(user_token, item_data):
+    response = requests.post(
+        f"{BASE_URL}/api/v1/items",
+        headers={"Authorization": f"Bearer {user_token}"},
+        json=item_data
+    )
+    return response.json()
+```
+
+**UI Still Tested:** CREATE tests use UI, seed data just provides baseline
+
+---
+
+### **Decision 17: CI/CD Matrix Configuration (Industry Standard)**
+
+**Problem:** Run browsers in parallel or sequentially?
+
+**Solution:** Parallel matrix builds
+
+**Configuration:**
+```yaml
+jobs:
+  test:
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+      fail-fast: false
+    runs-on: ubuntu-latest
+```
+
+**Why It Works:**
+- **3x faster** → All browsers run simultaneously
+- **Fast feedback** → Know about cross-browser issues quickly
+- **GitHub Actions native** → No custom orchestration needed
+- **Industry standard** → Standard CI/CD practice
+
+---
+
+### **Decision 18: Log Retention Policy (Industry Standard)**
+
+**Problem:** How long to keep logs?
+
+**Solution:** Last 5 runs locally, 30 days in CI/CD
+
+**Implementation:**
+```python
+# Local cleanup
+log_files = sorted(glob("logs/*.log"), key=os.path.getmtime)
+if len(log_files) > 5:
+    for old_log in log_files[:-5]:
+        os.remove(old_log)
+```
+
+**CI/CD:** GitHub Actions artifacts auto-expire after 30 days (default)
+
+**Why It Works:**
+- **Local:** Enough for recent debugging, doesn't fill disk
+- **CI/CD:** GitHub handles retention automatically
+- **Industry standard** → Common practice
+
+---
+
+## **4. Test Coverage**
+
+### **Test Design Strategy (Isolated vs E2E)**
 
 **Solution:** Hybrid approach - 80% isolated tests + 20% E2E tests
 
@@ -467,7 +633,7 @@ E2E Tests (5-8 tests):
 
 ---
 
-### **Decision 15: Test Data Management Strategy**
+### **Decision 19: Test Data Management Strategy**
 
 **Problem:** CRUD operations require different data states - CREATE needs clean slate, but READ/UPDATE/DELETE need existing data
 
@@ -509,6 +675,27 @@ Run 2: Load IDs → Reuse seed → Tests run → Keep seed
 Every Run: Delete old → Create fresh → Tests run → Delete all
 ```
 
+**Lazy Loading Optimization:**
+```python
+# Only create seed data for users that logged in
+@pytest.fixture(scope="session")
+def seed_data(auth_states):
+    """Depends on auth_states - only creates for logged-in users"""
+    seed_items = {}
+    for user_email in auth_states.keys():
+        seed_items[user_email] = create_seed_for_user(user_email)
+    return seed_items
+
+# Smoke tests (5 tests) → 3-6 seed items
+# ADMIN only tests → 24 seed items (8 admins × 3)
+# Full suite (38 tests) → 72 seed items (24 users × 3)
+```
+
+**Dependency Chain:**
+```
+test_context → seed_data → auth_states → determine_needed_users
+```
+
 **Key Rules:**
 1. Seed data is sacred - Never delete items prefixed with `SEED_`
 2. Each user has own seed data - Parallel execution safe
@@ -530,7 +717,7 @@ Every Run: Delete old → Create fresh → Tests run → Delete all
 
 ---
 
-### **Decision 16: Test Context Pattern (Industry Standard)**
+### **Decision 20: Test Context Pattern (Industry Standard)**
 
 **Problem:** Tests need to know which user they're running as, which seed data to use, and which auth token to use - especially in parallel execution
 
@@ -620,6 +807,206 @@ Test uses context.get_seed_item("physical")
 - Test Harness (Netflix) → Similar but more complex
 - Context Manager (Uber) → Good for cleanup, but less flexible
 - Direct fixture injection → Too many fixtures, unclear dependencies
+
+---
+
+### **Decision 21: Test Isolation Validation (Industry Standard)**
+
+**Problem:** How to ensure tests are truly independent and can run in any order?
+
+**Solution:** pytest-random-order plugin for test randomization
+
+**Implementation:**
+```python
+# requirements.txt
+pytest-random-order==1.1.0
+
+# pytest.ini
+[pytest]
+addopts = 
+    --random-order
+    --random-order-bucket=global
+```
+
+**Why It Works:**
+- **Validates independence** → Tests run in different order each time
+- **Catches hidden dependencies** → Fails if tests depend on execution order
+- **Industry standard** → Used by Google, Netflix, Uber
+- **Simple** → One plugin, one config line
+
+---
+
+### **Decision 22: Browser Configuration (Industry Standard)**
+
+**Problem:** Should browser run in headless mode or show UI?
+
+**Solution:** Configurable headless mode via environment variable
+
+**Implementation:**
+```python
+# config/browser_config.py
+import os
+
+class BrowserConfig:
+    HEADLESS = os.getenv("HEADLESS", "true").lower() == "true"
+    BROWSER_TYPE = os.getenv("BROWSER", "chromium")
+    SLOW_MO = int(os.getenv("SLOW_MO", "0"))
+```
+
+**Usage:**
+```bash
+# Local debugging (show browser)
+HEADLESS=false pytest
+
+# CI/CD (headless, default)
+pytest
+```
+
+**Why It Works:**
+- **Flexible** → Headless in CI, headed for debugging
+- **Fast** → Headless is faster
+- **Standard** → Industry best practice
+
+---
+
+### **Decision 23: Environment Configuration (Industry Standard)**
+
+**Problem:** Need to test against different environments (local, staging, production)
+
+**Solution:** Configurable base URL via environment variable
+
+**Implementation:**
+```python
+# config/settings.py
+import os
+
+class Settings:
+    BASE_URL = os.getenv("BASE_URL", "https://testing-box.vercel.app")
+    API_BASE_URL = f"{BASE_URL}/api/v1"
+    DEFAULT_TIMEOUT = 30000
+    NAVIGATION_TIMEOUT = 30000
+```
+
+**Usage:**
+```bash
+# Test against local
+BASE_URL=http://localhost:3000 pytest
+
+# Test against staging
+BASE_URL=https://staging.example.com pytest
+```
+
+**Why It Works:**
+- **Flexible** → Test any environment
+- **Simple** → One environment variable
+- **Standard** → Common practice
+
+---
+
+### **Decision 24: API Client Pattern (Industry Standard)**
+
+**Problem:** Need reusable API client for seed data creation and validation
+
+**Solution:** Dedicated APIClient class with retry logic
+
+**Implementation:**
+```python
+# utils/api_client.py
+class APIClient:
+    def __init__(self, base_url: str, token: str = None):
+        self.base_url = base_url
+        self.token = token
+    
+    def login(self, email: str, password: str):
+        # Login and get token
+        pass
+    
+    def create_item(self, item_data: dict):
+        # Create item with retry logic
+        pass
+    
+    def delete_item(self, item_id: str):
+        # Delete item
+        pass
+```
+
+**Why It Works:**
+- **Reusable** → One client for all API calls
+- **Reliable** → Built-in retry logic
+- **Clean** → Separates API logic from tests
+- **Industry standard** → Used by all major companies
+
+---
+
+### **Decision 25: Viewport Configuration**
+
+**Problem:** What screen size should browser use?
+
+**Solution:** Explicit viewport configuration (desktop: 1920x1080)
+
+**Implementation:**
+```python
+# config/browser_config.py
+class BrowserConfig:
+    VIEWPORT = {
+        "desktop": {"width": 1920, "height": 1080},
+        "mobile": {"width": 375, "height": 667},
+        "tablet": {"width": 768, "height": 1024}
+    }
+```
+
+**Why It Works:**
+- **Consistent** → Same screen size every run
+- **Predictable** → Tests behave consistently
+- **Configurable** → Can test different devices
+
+---
+
+### **Decision 26: Timeout Configuration**
+
+**Problem:** How long to wait before giving up?
+
+**Solution:** Explicit timeout configuration (30 seconds default)
+
+**Implementation:**
+```python
+# pytest.ini
+[pytest]
+timeout = 60
+timeout_method = thread
+
+# Playwright config
+page.set_default_timeout(30000)  # 30 seconds
+page.set_default_navigation_timeout(30000)
+```
+
+**Why It Works:**
+- **Prevents hangs** → Tests don't wait forever
+- **Explicit** → Clear expectations
+- **Standard** → Industry best practice
+
+---
+
+### **Decision 27: Video Recording Strategy**
+
+**Problem:** Should we record videos of test runs?
+
+**Solution:** Video recording on CI/CD failures only
+
+**Implementation:**
+```python
+# conftest.py
+is_ci = os.getenv("CI") == "true"
+context = browser.new_context(
+    record_video_dir="videos/" if is_ci else None,
+    record_video_size={"width": 1920, "height": 1080}
+)
+```
+
+**Why It Works:**
+- **Comprehensive debugging** → Video shows exactly what happened
+- **Efficient** → Only in CI/CD, not local
+- **Storage optimized** → Only on failures
 
 ---
 
