@@ -633,87 +633,213 @@ E2E Tests (5-8 tests):
 
 ---
 
-### **Decision 19: Test Data Management Strategy**
+### **Decision 19: Test Data Management Strategy (Per-Test Lazy Loading)**
 
-**Problem:** CRUD operations require different data states - CREATE needs clean slate, but READ/UPDATE/DELETE need existing data
+**Problem:** Each test needs specific data to run independently. Creating baseline data upfront is wasteful - if a test isn't run, that data isn't needed.
 
-**Solution:** Two-tier data strategy - Seed Data (persistent) + Transient Data (temporary)
+**Solution:** Pure lazy loading - Just-In-Time (JIT) data setup per test. Only create data when that specific test needs it.
 
-**Seed Data (Tier 1):**
-- **Purpose:** Pre-existing data for READ/UPDATE/DELETE tests
-- **Lifecycle:** Created once at suite start, never deleted
-- **Quantity:** 72 items (24 users × 3 item types each)
-- **Naming:** `SEED_{ItemType}_{UserRole}{Number}`
+**Core Strategy: Per-Test, Account-Specific Setup**
+- **Lifecycle:** No session-level setup. Data created per-test only when needed.
+- **Naming:** Test-specific identifiers
 - **Storage:** Real data in MongoDB database
-- **Management:** Idempotent (reuse if exists, create if missing)
+- **Management:** Lazy loading - check if exists, create if missing, reuse if exists
 
-**Transient Data (Tier 2):**
-- **Purpose:** Test-specific data for CREATE/DELETE tests
-- **Lifecycle:** Created per test, deleted after test
-- **Naming:** `Transient_{ItemType}_{UUID}`
-- **Storage:** Real data in MongoDB (temporary)
-- **Management:** Auto-cleanup via fixtures
-
-**Seed Data Structure:**
-```
-Each user account has 3 seed items:
-- 1 PHYSICAL item (SEED_Physical_admin1)
-- 1 DIGITAL item (SEED_Digital_admin1)
-- 1 SERVICE item (SEED_Service_admin1)
-
-Total: 24 users × 3 items = 72 seed items
-(8 ADMIN + 8 EDITOR + 8 VIEWER users)
-```
-
-**Lifecycle Management:**
+**How It Works (Per-Test Setup, Role-Based):**
 ```python
-# Local Development: Reuse seed data
-Run 1: Create seed → Save IDs → Tests run → Keep seed
-Run 2: Load IDs → Reuse seed → Tests run → Keep seed
-
-# CI/CD: Fresh seed every run
-Every Run: Delete old → Create fresh → Tests run → Delete all
+Before each test runs:
+1. Identify: What user is running this test? (admin1, editor1, viewer1, etc.)
+2. Identify: What role does this user have? (ADMIN, EDITOR, VIEWER)
+3. Based on role, handle seed data:
+   ADMIN:
+   ├─ admin1 → CREATE seed data (once)
+   ├─ admin2, admin3, admin4 → REUSE admin1's data
+   EDITOR:
+   ├─ editor1 → CREATE seed data specific to editor1
+   ├─ editor2 → CREATE seed data specific to editor2
+   ├─ editor3 → CREATE seed data specific to editor3
+   VIEWER:
+   ├─ viewer1, viewer2, etc. → NO creation, just verify existing data
+4. Check: Does this user have the required data?
+   ├─ YES → Reuse it, run test
+   └─ NO → Create it, run test
+5. Run test with appropriate data
 ```
 
-**Lazy Loading Optimization:**
+**Example - Flow 3 Tests (Role-Based):**
+```
+Test Suite (Can run in ANY order):
+
+ADMIN TESTS:
+TC-LIST-001 (admin1 views):
+├─ Setup: Check - admin1 has seed items?
+│  ├─ NO → Create (Physical, Digital, Service) for admin1
+│  └─ YES → Reuse them
+└─ Test runs on admin1's data
+
+TC-LIST-002 (admin2 searches):
+├─ Setup: Check - admin2 has seed items?
+│  ├─ NO → Reuse admin1's data (ADMIN shares)
+│  └─ YES → Already there
+└─ Test runs on admin1's data (admin2 sees same items)
+
+TC-LIST-003 (admin3 filters):
+├─ Setup: Check - admin3 has seed items?
+│  ├─ NO → Reuse admin1's data (ADMIN shares)
+│  └─ YES → Already there
+└─ Test runs on admin1's data (admin3 sees same items)
+
+TC-LIST-004 (admin4 paginates):
+├─ Setup: Check - admin4 has seed items?
+│  ├─ NO → Reuse admin1's data (ADMIN shares)
+│  └─ YES → Already there
+└─ Test runs on admin1's data (admin4 sees same items)
+
+EDITOR TESTS:
+TC-LIST-002 (editor1 searches):
+├─ Setup: Check - editor1 has seed items?
+│  ├─ NO → Create (Physical, Digital, Service) for editor1
+│  └─ YES → Reuse them
+└─ Test runs on editor1's data (editor1 only sees own items)
+
+TC-LIST-003 (editor1 filters):
+├─ Setup: Check - editor1 has seed items?
+│  ├─ NO → Already created in previous test
+│  └─ YES → Reuse them
+└─ Test runs on editor1's data
+
+TC-LIST-001 (editor2 views):
+├─ Setup: Check - editor2 has seed items?
+│  ├─ NO → Create (Physical, Digital, Service) for editor2
+│  └─ YES → Reuse them
+└─ Test runs on editor2's data (DIFFERENT from editor1!)
+
+TC-LIST-001 (editor3 views):
+├─ Setup: Check - editor3 has seed items?
+│  ├─ NO → Create (Physical, Digital, Service) for editor3
+│  └─ YES → Reuse them
+└─ Test runs on editor3's data (DIFFERENT from editor1 and editor2!)
+
+VIEWER TESTS:
+TC-LIST-001 (viewer1 views):
+├─ Setup: NO data creation for VIEWER
+│  ├─ Viewer can see all items (admin + editor data)
+│  └─ Viewer is read-only
+└─ Test runs on system data (created by admins/editors)
+
+Key: 
+  - ADMIN: All admins share admin1's data (efficiency)
+  - EDITOR: Each editor has isolated data (correctness, privacy)
+  - VIEWER: No creation, reads system data (read-only role)
+  - Each test is INDEPENDENT and role-aware
+```
+
+**Implementation:**
 ```python
-# Only create seed data for users that logged in
+# Session level: Just authenticate, NO data creation
 @pytest.fixture(scope="session")
-def seed_data(auth_states):
-    """Depends on auth_states - only creates for logged-in users"""
-    seed_items = {}
-    for user_email in auth_states.keys():
-        seed_items[user_email] = create_seed_for_user(user_email)
-    return seed_items
+def auth_states(request):
+    """Only authenticate users, don't create data"""
+    needed_users = determine_needed_users(request.session.items)
+    return login_users(needed_users)  # 3 logins if all roles, 1 login if ADMIN only
 
-# Smoke tests (5 tests) → 3-6 seed items
-# ADMIN only tests → 24 seed items (8 admins × 3)
-# Full suite (38 tests) → 72 seed items (24 users × 3)
+# Test level: Create data only when this specific test needs it
+@pytest.fixture(scope="function")
+def test_context(request, auth_states):
+    """For EACH test, ensure test-specific data exists"""
+    user_email = get_user_for_test(request)
+    token = auth_states[user_email]["token"]
+    test_name = request.node.name
+    
+    # LAZY LOADING: Create data if missing
+    test_data = ensure_test_data_exists(user_email, token, test_name)
+    
+    # If data didn't exist → Created now
+    # If data existed → Reused
+    # Either way, test has what it needs
+    
+    yield TestContext(user_email, test_data)
+    
+    # Optional: Cleanup after test
+    cleanup_test_data(user_email, test_data)
+
+
+def ensure_test_data_exists(user_email, token, test_name):
+    """Lazy load: Check if exists, create if missing"""
+    client = APIClient(token=token)
+    
+    # Check: Does this user have data for this test?
+    existing = check_existing_test_data(user_email, test_name)
+    if existing:
+        logger.info(f"✅ Reusing existing data for {test_name}")
+        return existing
+    
+    # No existing data → Create it JIT
+    logger.info(f"Creating fresh data for {test_name}")
+    
+    if test_name == "test_view_items_list":
+        return create_items(client, count=5, test_name=test_name)
+    elif test_name == "test_search_items":
+        return create_search_items(client, test_name=test_name)
+    elif test_name == "test_pagination":
+        return create_items(client, count=21, test_name=test_name)
+    # ... etc for each test
+```
+
+**Data Isolation Per Test:**
+```
+admin1's account:
+├─ TC-LIST-001's data (5 view items)
+├─ TC-LIST-002's data (1 searchable item)
+├─ TC-LIST-003's data (filter items)
+├─ TC-LIST-004's data (sort items)
+└─ TC-LIST-005's data (21 pagination items)
+   (Each test has its OWN data, not shared)
+
+admin2's account:
+├─ TC-LIST-001's data (5 view items, separate from admin1)
+├─ TC-LIST-002's data (1 searchable item, separate)
+└─ ... (same structure, independent data)
+
+editor1's account:
+├─ TC-EDIT-001's data (edit test items)
+└─ TC-EDIT-002's data (validation test items)
+
+viewer1's account:
+└─ TC-VIEW-001's data (view test items)
 ```
 
 **Dependency Chain:**
 ```
-test_context → seed_data → auth_states → determine_needed_users
+test_context → ensure_test_data_exists → auth_states (only)
+(No session-level data creation!)
 ```
 
 **Key Rules:**
-1. Seed data is sacred - Never delete items prefixed with `SEED_`
-2. Each user has own seed data - Parallel execution safe
-3. UPDATE tests must restore - Return seed data to original state
-4. DELETE tests create transient items - Don't delete seed data
-5. Cleanup only transient data - Preserve seed for next run
+1. **NO baseline data** - Don't create upfront, create JIT
+2. **Each test has own data** - True independence
+3. **Any user can run any test** - Doesn't matter if admin1, admin2, or admin3
+4. **Before test runs** - Check if THAT user has THIS test's data
+5. **Reuse if exists** - Don't recreate unnecessarily
+6. **Account isolation** - Users only see their own items
+7. **Cleanup optional** - Can keep for reuse within session
 
 **Why It Works:**
-- **Solves CRUD data problem** → Each operation type has data it needs
-- **Parallel execution safe** → Each worker uses own user's seed data
-- **Repeatable** → Same seed data across runs (local) or fresh (CI)
-- **Industry standard** → Used by Google, Microsoft, Netflix, Uber
-- **Efficient** → Reuse seed data locally, fresh in CI/CD
+- **True test independence** → Each test has exactly what it needs
+- **No wasted data** → Don't create data for tests that won't run
+- **Account isolation** → Users can't see each other's items
+- **Any user can run** → admin1, admin2, admin3 all work the same
+- **Flexible assignment** → Can run in any order, any worker
+- **Parallel safe** → Each user's data is completely isolated
+- **Efficient** → Only create when needed (JIT = faster)
+- **Repeatable** → Same data across local runs, fresh in CI/CD
+- **Industry standard** → Used by Google, Netflix, Uber
 
 **Alternative Considered:**
-- Create all data per test → Too slow, database churn
-- Mock data → Doesn't test real database interactions
-- Shared mutable data → Race conditions in parallel execution
+- Baseline + per-test → Extra overhead, wasted data
+- Session-level all data → Wastes resources, tests dependent
+- Mock data → Doesn't test real database
+- Shared mutable data → Race conditions in parallel
 
 ---
 

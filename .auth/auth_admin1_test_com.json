@@ -1,0 +1,18 @@
+{
+  "cookies": [
+    {
+      "name": "refreshToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTU3NzJjYjg3ZjUwMzNhZGE3YmNiNzQiLCJlbWFpbCI6ImFkbWluMUB0ZXN0LmNvbSIsInR5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzY3Mzc2MTY1LCJleHAiOjE3Njc5ODA5NjV9._ipAEhKSYoKuNjKMa9Knn8BfaumQDGME5Ldq4g-xv4s",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1767980965.887775,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [],
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTU3NzJjYjg3ZjUwMzNhZGE3YmNiNzQiLCJlbWFpbCI6ImFkbWluMUB0ZXN0LmNvbSIsInJvbGUiOiJBRE1JTiIsInR5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3NjczNzYxNjYsImV4cCI6MTc2NzM3NzA2Nn0.7HkF6KMaiHegIQ452v_lxAS1M0Ive2-T__CM9SpHXdU",
+  "user_email": "admin1@test.com",
+  "expires_at": "2026-01-09T23:19:26.585467"
+}

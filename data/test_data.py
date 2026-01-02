@@ -26,51 +26,50 @@ class TestDataHelper:
         name: str,
         item_type: str = "PHYSICAL",
         price: float = 100.00,
+        is_active: bool = None,
         **kwargs
     ) -> Dict[str, Any]:
         """
-        Generate item data for creation.
+        Generate item data payload.
         
         Args:
             name: Item name
-            item_type: Item type (PHYSICAL, DIGITAL, SERVICE)
+            item_type: Item type
             price: Item price
-            **kwargs: Additional item fields
+            is_active: Optional active status (true/false)
+            **kwargs: Additional fields
             
         Returns:
             Item data dictionary
-            
-        Example:
-            >>> data = TestDataHelper.generate_item_data(
-            ...     name="Test Item",
-            ...     item_type="PHYSICAL",
-            ...     price=99.99
-            ... )
         """
+        # Base required fields
         base_data = {
             "name": name,
-            "description": f"Test item: {name}",
+            "description": f"Test item description for {name} with sufficient length for validation",
             "item_type": item_type,
             "price": price,
-            "quantity": 10,
-            "is_active": True
+            "category": "TestCategory"
         }
         
-        # Add type-specific fields
+        if is_active is not None:
+            base_data["is_active"] = is_active
+        
+        # Add type-specific required fields (FLAT structure)
         if item_type == "PHYSICAL":
             base_data.update({
-                "weight": 1.5,
-                "dimensions": "10x10x10"
+                "weight": 2.5,
+                "length": 35,  #  Flat fields, not nested!
+                "width": 25,
+                "height": 2
             })
         elif item_type == "DIGITAL":
             base_data.update({
-                "download_url": "https://example.com/download",
-                "file_size": "100MB"
+                "download_url": "https://example.com/download/file.zip",
+                "file_size": 1048576  # 1 MB in bytes
             })
         elif item_type == "SERVICE":
             base_data.update({
-                "duration": "1 hour",
-                "service_type": "Consultation"
+                "duration_hours": 8
             })
         
         # Merge with any additional fields

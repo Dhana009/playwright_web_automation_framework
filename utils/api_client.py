@@ -53,8 +53,7 @@ class APIClient:
     def _set_auth_header(self, token: str) -> None:
         """Set authorization header with token."""
         self.session.headers.update({
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
+            "Authorization": f"Bearer {token}"
         })
     
     def _request(
@@ -170,27 +169,89 @@ class APIClient:
     
     def create_item(self, item_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Create a new item.
+        Create a new item using multipart/form-data.
         
         Args:
-            item_data: Item data (name, item_type, price, etc.)
+            item_data: Item data with flat fields:
+                - name, description, item_type, price, category
+                - PHYSICAL: weight, length, width, height
+                - DIGITAL: download_url, file_size
+                - SERVICE: duration_hours
+                - Optional: tags (comma-separated string)
             
         Returns:
             Created item data with ID
             
         Example:
             >>> item = client.create_item({
-            ...     "name": "Test Item",
+            ...     "name": "Test Laptop",
+            ...     "description": "Test description...",
             ...     "item_type": "PHYSICAL",
-            ...     "price": 100.00
+            ...     "price": 999.99,
+            ...     "category": "Electronics",
+            ...     "weight": 2.5,
+            ...     "length": 35,
+            ...     "width": 25,
+            ...     "height": 2
             ... })
         """
         logger.info(f"Creating item: {item_data.get('name')}")
-        return self._request(
-            method="POST",
-            endpoint="/items",
-            json=item_data
-        )
+        
+        # Prepare form data (convert all values to strings for multipart)
+        form_data = {}
+        for key, value in item_data.items():
+            if value is not None:
+                form_data[key] = str(value)
+        
+        # Make request with form data
+        # 'requests' will automatically set Content-Type to application/x-www-form-urlencoded
+        url = f"{self.base_url}/items"
+        
+        for attempt in range(1, 4):  # 3 retries
+            try:
+                response = self.session.post(
+                    url,
+                    data=form_data,
+                    timeout=settings.API_TIMEOUT
+                )
+                
+                logger.debug(f"API Response: {response.status_code}")
+                response.raise_for_status()
+                
+                return response.json()
+                
+            except requests.exceptions.HTTPError as e:
+                status_code = e.response.status_code if hasattr(e, 'response') else 0
+                
+                # Don't retry on 409 Conflict - let caller handle it
+                if status_code == 409:
+                    logger.debug(f"Item conflict (409): {e}")
+                    raise
+                
+                # Retry on other errors
+                logger.warning(f"Create item failed (attempt {attempt}/3): {e}")
+                
+                if attempt < 3:
+                    time.sleep(1)
+                    continue
+                
+                raise APIException(
+                    endpoint="/items",
+                    status_code=status_code,
+                    message=str(e)
+                )
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"Create item failed (attempt {attempt}/3): {e}")
+                
+                if attempt < 3:
+                    time.sleep(1)
+                    continue
+                
+                raise APIException(
+                    endpoint="/items",
+                    status_code=0,
+                    message=str(e)
+                )
     
     def get_item(self, item_id: str) -> Dict[str, Any]:
         """
@@ -208,17 +269,45 @@ class APIClient:
             endpoint=f"/items/{item_id}"
         )
     
-    def get_all_items(self) -> Dict[str, Any]:
+    def get_all_items(
+        self,
+        limit: int = 100,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+        page: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
-        Get all items.
+        Get all items with filtering and pagination.
         
+        Args:
+            limit: Pagination limit
+            search: Search query
+            status: Filter by status (active, inactive, all)
+            sort_by: Field to sort by (name, category, price, createdAt)
+            sort_order: Sort order (asc, desc)
+            page: Page number
+            
         Returns:
-            List of items with pagination info
+            List of items response
         """
-        logger.debug("Getting all items")
+        params = {"limit": limit}
+        if search:
+            params["search"] = search
+        if status:
+            params["status"] = status
+        if sort_by:
+            params["sort_by"] = sort_by
+        if sort_order:
+            params["sort_order"] = sort_order
+        if page:
+            params["page"] = page
+            
         return self._request(
             method="GET",
-            endpoint="/items"
+            endpoint="/items",
+            params=params
         )
     
     def update_item(self, item_id: str, item_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -259,6 +348,9 @@ class APIClient:
         """
         Validate if current token is valid.
         
+        Since there's no /auth/me endpoint, we validate by making
+        an authenticated API call to GET /items.
+        
         Returns:
             True if token is valid, False otherwise
             
@@ -270,8 +362,8 @@ class APIClient:
             return False
         
         try:
-            # Try to get user info
-            self._request(method="GET", endpoint="/auth/me")
+            # Try to get items (any authenticated endpoint works)
+            self._request(method="GET", endpoint="/items")
             return True
         except APIException:
             return False

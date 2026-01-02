@@ -1,0 +1,25 @@
+2026-01-02 23:24:59 [   DEBUG] [proactor_events.py:633] Using proactor: IocpProactor
+2026-01-02 23:25:00 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:00 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 10510
+2026-01-02 23:25:00 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:00 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 10510
+2026-01-02 23:25:00 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:00 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 4992
+2026-01-02 23:25:00 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 1643
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 10510
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 10510
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 10510
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 10510
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 10510
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 4041
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 2141
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:241] Starting new HTTP connection (1): localhost:3000
+2026-01-02 23:25:01 [   DEBUG] [connectionpool.py:544] http://localhost:3000 "GET /api/v1/items HTTP/1.1" 200 10510

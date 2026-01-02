@@ -1,0 +1,18 @@
+{
+  "cookies": [
+    {
+      "name": "refreshToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTU3NzJjYzg3ZjUwMzNhZGE3YmNiOTUiLCJlbWFpbCI6InZpZXdlcjRAdGVzdC5jb20iLCJ0eXBlIjoicmVmcmVzaCIsImlhdCI6MTc2NzM3NjM2MiwiZXhwIjoxNzY3OTgxMTYyfQ.ZeXQJWsXwSvOLcIN3VW4R-g1Q2QjY7akxalvQShV7Fo",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1767981162.763162,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [],
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTU3NzJjYzg3ZjUwMzNhZGE3YmNiOTUiLCJlbWFpbCI6InZpZXdlcjRAdGVzdC5jb20iLCJyb2xlIjoiVklFV0VSIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc2NzM3NjM2MywiZXhwIjoxNzY3Mzc3MjYzfQ.SZfndyc4hwW26YyA_eOYwtScIycwRb5OlmdA7oQp8gw",
+  "user_email": "viewer4@test.com",
+  "expires_at": "2026-01-09T23:22:43.331693"
+}

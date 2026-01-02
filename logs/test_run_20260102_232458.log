@@ -1,0 +1,85 @@
+2026-01-02 23:24:58 [    INFO] [logger.py:98] Logger initialized. Log file: logs\test_run_20260102_232458.log
+2026-01-02 23:24:59 [    INFO] [conftest.py:111] ================================================================================
+2026-01-02 23:24:59 [    INFO] [conftest.py:112] TEST SESSION STARTED
+2026-01-02 23:24:59 [    INFO] [conftest.py:113] ================================================================================
+2026-01-02 23:24:59 [    INFO] [conftest.py:128] Launching browser: chromium
+2026-01-02 23:24:59 [    INFO] [conftest.py:129] Headless mode: False
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:47] Setting up authentication states
+2026-01-02 23:25:00 [    INFO] [worker_mapper.py:116] Determined 12 users needed for 3 roles across 4 workers
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:51] Need to authenticate 12 users
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:86] Found existing auth state for viewer4@test.com
+2026-01-02 23:25:00 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:00 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:93] Reusing valid token for viewer4@test.com
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:86] Found existing auth state for admin4@test.com
+2026-01-02 23:25:00 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:00 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:93] Reusing valid token for admin4@test.com
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:86] Found existing auth state for editor2@test.com
+2026-01-02 23:25:00 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:00 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:93] Reusing valid token for editor2@test.com
+2026-01-02 23:25:00 [    INFO] [auth_manager.py:86] Found existing auth state for editor4@test.com
+2026-01-02 23:25:00 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for editor4@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:86] Found existing auth state for viewer3@test.com
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for viewer3@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:86] Found existing auth state for admin2@test.com
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for admin2@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:86] Found existing auth state for admin1@test.com
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for admin1@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:86] Found existing auth state for admin3@test.com
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for admin3@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:86] Found existing auth state for viewer2@test.com
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for viewer2@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:86] Found existing auth state for editor1@test.com
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for editor1@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:86] Found existing auth state for editor3@test.com
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for editor3@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:86] Found existing auth state for viewer1@test.com
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:85] API GET /items (attempt 1/3)
+2026-01-02 23:25:01 [   DEBUG] [api_client.py:95] API Response: 200
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:93] Reusing valid token for viewer1@test.com
+2026-01-02 23:25:01 [    INFO] [auth_manager.py:59] Successfully authenticated 12 users
+2026-01-02 23:25:02 [    INFO] [conftest.py:209] Loaded auth state for viewer1@test.com
+2026-01-02 23:25:03 [    INFO] [conftest.py:209] Loaded auth state for editor1@test.com
+2026-01-02 23:25:04 [    INFO] [items_page.py:90] Searching for: SEED_
+2026-01-02 23:25:04 [   DEBUG] [base_page.py:127] Filling text in [data-testid="item-search"]: SEED_
+2026-01-02 23:25:06 [    INFO] [conftest.py:209] Loaded auth state for editor1@test.com
+2026-01-02 23:25:07 [    INFO] [conftest.py:209] Loaded auth state for editor1@test.com
+2026-01-02 23:25:08 [    INFO] [conftest.py:209] Loaded auth state for admin1@test.com
+2026-01-02 23:25:13 [    INFO] [conftest.py:209] Loaded auth state for editor1@test.com
+2026-01-02 23:25:15 [    INFO] [conftest.py:209] Loaded auth state for admin1@test.com
+2026-01-02 23:25:16 [    INFO] [items_page.py:107] Setting page size to: 10
+2026-01-02 23:25:16 [   DEBUG] [base_page.py:218] Selecting option 10 in [data-testid="pagination-limit"]
+2026-01-02 23:25:18 [    INFO] [items_page.py:192] Going to page 2
+2026-01-02 23:25:18 [   DEBUG] [base_page.py:106] Clicking: [data-testid="pagination-page-2"]
+2026-01-02 23:25:21 [    INFO] [conftest.py:209] Loaded auth state for admin1@test.com
+2026-01-02 23:25:24 [    INFO] [conftest.py:209] Loaded auth state for admin1@test.com
+2026-01-02 23:25:24 [    INFO] [items_page.py:90] Searching for: SEED_
+2026-01-02 23:25:24 [   DEBUG] [base_page.py:127] Filling text in [data-testid="item-search"]: SEED_
+2026-01-02 23:25:26 [    INFO] [conftest.py:209] Loaded auth state for admin1@test.com
+2026-01-02 23:25:29 [    INFO] [conftest.py:209] Loaded auth state for admin1@test.com
+2026-01-02 23:25:30 [    INFO] [conftest.py:209] Loaded auth state for editor1@test.com
+2026-01-02 23:25:30 [    INFO] [items_page.py:124] Filtering by status: active
+2026-01-02 23:25:30 [   DEBUG] [base_page.py:218] Selecting option active in [data-testid="filter-status"]
+2026-01-02 23:25:31 [   DEBUG] [base_page.py:197] Waiting for [data-testid="loading-spinner"] to be hidden
+2026-01-02 23:25:31 [    INFO] [conftest.py:137] Closing browser
+2026-01-02 23:25:31 [    INFO] [conftest.py:120] ================================================================================
+2026-01-02 23:25:31 [    INFO] [conftest.py:121] TEST SESSION COMPLETED
+2026-01-02 23:25:31 [    INFO] [conftest.py:122] ================================================================================

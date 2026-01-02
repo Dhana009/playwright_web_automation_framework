@@ -482,50 +482,140 @@ Each test case includes:
 - User on dashboard or items page
 
 **Test Steps:**
-1. Look for "Create Item" button: `data-testid="quick-action-create-item"`
-2. Verify button is not visible/rendered
-3. Attempt to navigate directly to `/items/create`
-4. Verify access denied or redirect
+1. Navigate directly to `/items/create`
+2. Fill the item creation form with valid data (Name, Price, etc.)
+3. Click "Create Item" button
+4. Verify error message appears
 
 **Expected Results:**
-- Create button not visible for VIEWER
-- Direct navigation to create page blocked
+- Viewer can access the create page and fill the form
+- Form submission is blocked
+- Error message "Access denied. Requires one of the following roles: ADMIN, EDITOR" is displayed after submission
 
 **Assertions:**
-- Create button not in DOM
-- Attempting to access `/items/create` shows error or redirects
+- Error message "Access denied. Requires one of the following roles: ADMIN, EDITOR" is visible
+- Success toast does NOT appear
 
 ---
 
-## Flow 3: Item List Tests (6 Tests)
+## Flow 3: Item List Tests (6 Tests) - Per-Test JIT Data Setup
 
-### TC-LIST-001: View Items List (ALL Roles) ✅ POSITIVE
+### TC-LIST-001: View Items List ✅ POSITIVE
 
 **Priority:** P0  
 **Type:** Isolated  
 **Category:** Positive (Happy Path)  
-**Role:** ALL
+**Role:** ADMIN, EDITOR, VIEWER
+
+---
+
+#### **ADMIN Testing**
 
 **Preconditions:**
-- User logged in (any role)
-- At least 5 items exist in database
+- User logged in as admin (admin1...admin8)
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if admin has 5 items
+  - If NO → Create 5 items for this admin
+  - If YES → Reuse them
 - User navigated to `/items`
 
-**Test Steps:**
+**Test Data:**
+```json
+{
+  "items": 5,
+  "naming": "TC-LIST-001-Item-{number}-admin",
+  "setup_required": true,
+  "visibility": "All items (no filter)"
+}
+```
+
+**Expected Results:**
+- Sees: 5 items (their created items, no filtering)
+
+**Assertions:**
+- Table visible
+- Exactly 5 items shown
+- All columns present
+
+---
+
+#### **EDITOR Testing**
+
+**Preconditions:**
+- User logged in as editor (editor1...editor8)
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if editor has 5 items
+  - If NO → Create 5 items for this editor
+  - If YES → Reuse them
+- User navigated to `/items`
+
+**Test Data:**
+```json
+{
+  "items": 5,
+  "naming": "TC-LIST-001-Item-{number}-editor",
+  "setup_required": true,
+  "visibility": "Only own items (filtered by created_by)"
+}
+```
+
+**Expected Results:**
+- Sees: 5 items (only their created items, filtered)
+- Admin's items NOT visible (isolated by created_by)
+
+**Assertions:**
+- Table visible
+- Exactly 5 items shown (only their own)
+- No admin items visible
+
+---
+
+#### **VIEWER Testing**
+
+**Preconditions:**
+- User logged in as viewer (viewer1, viewer2)
+- **Data Setup:** ❌ NOT NEEDED!
+  - VIEWER cannot create items
+  - No point in setting up data
+  - Uses existing items created by admin/editor
+- User navigated to `/items`
+
+**Test Data:**
+```json
+{
+  "items": 0,
+  "setup_required": false,
+  "uses_existing": "Admin + Editor items",
+  "visibility": "All items (no filter - sees everything)"
+}
+```
+
+**Expected Results:**
+- Sees: All items in system (admin items + editor items)
+- No filtering applied
+- Can see both admin's and editor's items
+
+**Assertions:**
+- Table visible
+- Multiple items shown (admin + editor created)
+- All items visible (no filtering)
+
+---
+
+**General Test Steps (All Roles):**
 1. Wait for items table: `data-testid="items-table"` visible
 2. Verify table headers present
 3. Count item rows
 4. Verify pagination controls visible
 
-**Expected Results:**
-- Items table loads successfully
-- Items displayed in table rows
-- Pagination controls visible
+**Columns:** Name, Description, Status, Category, Price, Created Date, Actions
 
-**Assertions:**
-- Table visible
-- At least 1 item row present
-- Columns: Name, Description, Status, Category, Price, Created Date, Actions
+**Summary:**
+| Role | Setup? | Sees | Items |
+|------|--------|------|-------|
+| ADMIN | ✅ YES | All items (no filter) | 5 created items |
+| EDITOR | ✅ YES | Own items (filtered) | 5 created items |
+| VIEWER | ❌ NO | All items (no filter) | Existing org data |
 
 ---
 
@@ -534,33 +624,94 @@ Each test case includes:
 **Priority:** P1  
 **Type:** Isolated  
 **Category:** Positive (Happy Path)  
-**Role:** ADMIN
+**Role:** ADMIN, EDITOR, VIEWER
+
+---
+
+#### **ADMIN Testing**
 
 **Preconditions:**
-- User logged in as `admin1@test.com`
-- Item with name "Laptop" exists
+- User logged in as admin
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if admin has searchable item
+  - If NO → Create 1 item named "TC-LIST-002-Laptop-{uuid}"
+  - If YES → Reuse it
 - User on `/items` page
 
 **Test Steps:**
 1. Locate search input: `data-testid="item-search"`
-2. Fill search: `Laptop`
+2. Fill search: `TC-LIST-002-Laptop`
 3. Wait for table update
 4. Verify filtered results
 
-**Test Data:**
-```json
-{
-  "searchQuery": "Laptop"
-}
-```
-
 **Expected Results:**
-- Table shows only items matching "Laptop"
-- Other items filtered out
+- Table shows item matching search
+- Admin sees their created item
 
 **Assertions:**
-- Search input contains "Laptop"
-- All visible item names contain "Laptop"
+- Search results show the laptop item
+- Item visible (admin can see all items)
+
+---
+
+#### **EDITOR Testing**
+
+**Preconditions:**
+- User logged in as editor
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if editor has searchable item
+  - If NO → Create 1 item named "TC-LIST-002-Laptop-{uuid}"
+  - If YES → Reuse it
+- User on `/items` page
+
+**Test Steps:**
+1. Locate search input: `data-testid="item-search"`
+2. Fill search: `TC-LIST-002-Laptop`
+3. Wait for table update
+4. Verify filtered results
+
+**Expected Results:**
+- Table shows only editor's item matching search
+- Admin's items NOT visible (filtered by created_by)
+
+**Assertions:**
+- Search results show only editor's laptop item
+- No items from other editors/admins visible
+
+---
+
+#### **VIEWER Testing**
+
+**Preconditions:**
+- User logged in as viewer
+- **Data Setup:** ❌ NOT NEEDED!
+  - VIEWER cannot create
+  - Uses items created by admin/editor
+- User on `/items` page
+
+**Test Steps:**
+1. Search for an item created by admin or editor (e.g., search "Laptop")
+2. Locate search input: `data-testid="item-search"`
+3. Fill search: `Laptop` or similar
+4. Wait for table update
+5. Verify filtered results
+
+**Expected Results:**
+- Table shows all items matching search from entire organization
+- Sees results from both admin and editor items
+
+**Assertions:**
+- Search results include items from all creators
+- Viewer can search across all org items (no filtering)
+
+---
+
+**Summary:**
+| Role | Setup? | Searches | Sees |
+|------|--------|----------|------|
+| ADMIN | ✅ YES | Their created items | Only their items |
+| EDITOR | ✅ YES | Their created items | Only their items |
+| VIEWER | ❌ NO | All org items | All items (admin + editor) |
 
 ---
 
@@ -569,11 +720,18 @@ Each test case includes:
 **Priority:** P1  
 **Type:** Isolated  
 **Category:** Positive (Happy Path)  
-**Role:** ADMIN
+**Role:** ADMIN, EDITOR, VIEWER
+
+---
+
+#### **ADMIN Testing**
 
 **Preconditions:**
-- User logged in
-- Both active and inactive items exist
+- User logged in as admin
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if admin has 3 active + 1 inactive item
+  - If NO → Create 4 items: 3 active, 1 inactive
+  - If YES → Reuse them
 - User on `/items` page
 
 **Test Steps:**
@@ -583,12 +741,76 @@ Each test case includes:
 4. Verify only active items shown
 
 **Expected Results:**
-- Table shows only active items
-- Inactive items hidden
+- Shows 3 active items (their created)
+- 1 inactive item hidden
 
 **Assertions:**
-- All visible items have status badge showing "Active"
-- Status filter shows "Active" selected
+- Exactly 3 items visible
+- All show "Active" status
+- Filter shows "Active" selected
+
+---
+
+#### **EDITOR Testing**
+
+**Preconditions:**
+- User logged in as editor
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if editor has 3 active + 1 inactive item
+  - If NO → Create 4 items: 3 active, 1 inactive
+  - If YES → Reuse them
+- User on `/items` page
+
+**Test Steps:**
+1. Locate status filter: `data-testid="filter-status"`
+2. Select "Active" from dropdown
+3. Wait for table update
+4. Verify only active items shown
+
+**Expected Results:**
+- Shows 3 active items (only their created, filtered by created_by)
+- 1 inactive item hidden
+- Admin's items NOT visible
+
+**Assertions:**
+- Exactly 3 items visible (only their own active)
+- No items from other editors/admins
+- All show "Active" status
+
+---
+
+#### **VIEWER Testing**
+
+**Preconditions:**
+- User logged in as viewer
+- **Data Setup:** ❌ NOT NEEDED!
+  - Uses items created by admin/editor
+- User on `/items` page
+
+**Test Steps:**
+1. Locate status filter: `data-testid="filter-status"`
+2. Select "Active" from dropdown
+3. Wait for table update
+4. Verify only active items shown
+
+**Expected Results:**
+- Shows all active items from entire organization (admin + editor)
+- Inactive items hidden
+- No filtering by creator (sees all)
+
+**Assertions:**
+- Multiple active items visible (from all creators)
+- All visible items show "Active" status
+- Can see items from both admin and editor
+
+---
+
+**Summary:**
+| Role | Setup? | Sees When Filtered | Items |
+|------|--------|-------------------|-------|
+| ADMIN | ✅ YES | Only their active items | 3 active |
+| EDITOR | ✅ YES | Only their active items | 3 active |
+| VIEWER | ❌ NO | All active items (org-wide) | All active (admin+editor) |
 
 ---
 
@@ -597,27 +819,97 @@ Each test case includes:
 **Priority:** P1  
 **Type:** Isolated  
 **Category:** Edge Case (Sorting Feature)  
-**Role:** ADMIN
+**Role:** ADMIN, EDITOR, VIEWER
+
+---
+
+#### **ADMIN Testing**
 
 **Preconditions:**
-- User logged in
-- Multiple items with different prices exist
+- User logged in as admin
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if admin has 3 price items ($1, $50, $999)
+  - If NO → Create 3 items with different prices
+  - If YES → Reuse them
 - User on `/items` page
 
 **Test Steps:**
-1. Locate price column header sort button
+1. Locate price column header sort button: `data-testid="sort-price"`
 2. Click to sort ascending
 3. Wait for table update
 4. Verify items sorted by price (low to high)
 
 **Expected Results:**
-- Items sorted by price ascending
-- Sort indicator shows ascending arrow
+- Items sorted ascending: $1.00 → $50.00 → $999.00
+- Shows their created items sorted
 
 **Assertions:**
-- First item has lowest price
-- Last item has highest price
-- Prices in ascending order
+- First item: $1.00
+- Second item: $50.00
+- Last item: $999.00
+
+---
+
+#### **EDITOR Testing**
+
+**Preconditions:**
+- User logged in as editor
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if editor has 3 price items ($1, $50, $999)
+  - If NO → Create 3 items with different prices
+  - If YES → Reuse them
+- User on `/items` page
+
+**Test Steps:**
+1. Locate price column header sort button: `data-testid="sort-price"`
+2. Click to sort ascending
+3. Wait for table update
+4. Verify items sorted by price (low to high)
+
+**Expected Results:**
+- Items sorted ascending: $1.00 → $50.00 → $999.00
+- Only their items shown (filtered by created_by)
+- Admin's items NOT visible
+
+**Assertions:**
+- First item: $1.00 (editor's)
+- Second item: $50.00 (editor's)
+- Last item: $999.00 (editor's)
+- No admin items visible
+
+---
+
+#### **VIEWER Testing**
+
+**Preconditions:**
+- User logged in as viewer
+- **Data Setup:** ❌ NOT NEEDED!
+  - Uses items created by admin/editor
+- User on `/items` page
+
+**Test Steps:**
+1. Locate price column header sort button: `data-testid="sort-price"`
+2. Click to sort ascending
+3. Wait for table update
+4. Verify items sorted by price (low to high)
+
+**Expected Results:**
+- All org items sorted by price ascending
+- Sees both admin and editor items sorted together
+
+**Assertions:**
+- Items sorted from lowest to highest price
+- Multiple items visible (from all creators)
+- All org data visible (no filtering)
+
+---
+
+**Summary:**
+| Role | Setup? | Sorts | Items |
+|------|--------|-------|-------|
+| ADMIN | ✅ YES | Only their items | Their 3 price items |
+| EDITOR | ✅ YES | Only their items | Their 3 price items |
+| VIEWER | ❌ NO | All org items | All items (admin+editor) |
 
 ---
 
@@ -626,62 +918,231 @@ Each test case includes:
 **Priority:** P1  
 **Type:** Isolated  
 **Category:** Edge Case (Pagination Boundary)  
-**Role:** ADMIN
+**Role:** ADMIN, EDITOR, VIEWER
+
+⚠️ **CRITICAL:** THIS TEST REQUIRES 21 ITEMS! (Page size = 10, so 21 items = 3 pages minimum)
+
+---
+
+#### **ADMIN Testing**
 
 **Preconditions:**
-- User logged in
-- More than 20 items exist (default page size)
+- User logged in as admin
+- **Data Setup:** ✅ REQUIRED (CRITICAL!)
+  - Before test: Check if admin has 21 pagination items
+  - If NO → Create 21 items with names: "TC-LIST-005-Pagination-1" through "TC-LIST-005-Pagination-21"
+  - If YES → Reuse them
 - User on `/items` page 1
 
 **Test Steps:**
-1. Verify current page is 1
+we havve to set iterms per page to 10 first from dropdown
+1. Verify page 1 shows 10 items (Pagination-1 through Pagination-10)
 2. Locate next button: `data-testid="pagination-next"`
 3. Click next button
 4. Wait for page 2 to load
 5. Verify URL contains `page=2`
 
 **Expected Results:**
-- Page 2 loads
-- Different items displayed
+- Page 2 loads with items 11-20
 - Previous button now enabled
+- Shows their 21 pagination items across 3 pages
 
 **Assertions:**
 - URL contains `page=2`
-- Page 2 items different from page 1
+- Page 2 shows different items (Pagination-11 through Pagination-20)
+- Previous button enabled
+- All items belong to admin
+
+---
+
+#### **EDITOR Testing**
+
+**Preconditions:**
+- User logged in as editor
+- **Data Setup:** ✅ REQUIRED (CRITICAL!)
+  - Before test: Check if editor has 21 pagination items
+  - If NO → Create 21 items with names: "TC-LIST-005-Pagination-1" through "TC-LIST-005-Pagination-21"
+  - If YES → Reuse them
+- User on `/items` page 1
+
+**Test Steps:**
+1. Verify page 1 shows 10 items (only editor's Pagination items, filtered by created_by)
+2. Locate next button: `data-testid="pagination-next"`
+3. Click next button
+4. Wait for page 2 to load
+5. Verify URL contains `page=2`
+
+**Expected Results:**
+- Page 2 loads with items 11-20
+- Only editor's pagination items shown (isolated by created_by)
+- Admin's items NOT visible on any page
+
+**Assertions:**
+- Page 2 shows Pagination-11 through Pagination-20 (editor's only)
+- No admin items on page 1 or page 2
 - Previous button enabled
 
 ---
 
-### TC-LIST-006: Clear All Filters ✅ POSITIVE
+#### **VIEWER Testing**
+
+**Preconditions:**
+- User logged in as viewer
+- **Data Setup:** ❌ NOT NEEDED!
+  - Uses items created by admin/editor
+  - Can paginate through all org items
+- User on `/items` page 1
+
+**Test Steps:**
+1. Verify page 1 shows 10 items (from all creators)
+2. Locate next button: `data-testid="pagination-next"`
+3. Click next button
+4. Wait for page 2 to load
+5. Verify URL contains `page=2`
+
+**Expected Results:**
+- Page 2 loads with next 10 items
+- Sees items from both admin and editor across pages
+- No filtering by creator
+
+**Assertions:**
+- Page 2 shows different items
+- Multiple items visible (from all creators)
+- Can paginate through all org data
+
+---
+
+**Data Summary:**
+```
+ADMIN:   21 pagination items (their created)
+EDITOR:  21 pagination items (their created)
+VIEWER:  Uses all org items (admin + editor)
+
+Page 1:  Items 1-10
+Page 2:  Items 11-20
+Page 3:  Item 21
+```
+
+**Critical Notes:**
+- ⚠️ MUST create 21 items to test pagination properly!
+- ADMIN sees 21 items (3 pages)
+- EDITOR sees 21 items (3 pages)
+- VIEWER sees all org items (admin + editor combined)
+
+---
+
+### TC-LIST-006: Clear Filters ✅ POSITIVE
 
 **Priority:** P2  
 **Type:** Isolated  
 **Category:** Positive (Happy Path)  
-**Role:** ADMIN
+**Role:** ADMIN, EDITOR, VIEWER
+
+---
+
+#### **ADMIN Testing**
 
 **Preconditions:**
-- User logged in
-- Filters applied (search + status filter)
+- User logged in as admin
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if admin has 5 items
+  - If NO → Create 5 items for admin
+  - If YES → Reuse them
 - User on `/items` page
 
 **Test Steps:**
-1. Apply search filter: `Test`
-2. Apply status filter: `Active`
-3. Verify filtered results shown
-4. Locate clear filters button: `data-testid="clear-filters"`
-5. Click clear filters
-6. Wait for table reset
+1. Apply search filter: `TC-LIST-006` (to show items)
+2. Verify filtered results shown (should show 5 items)
+3. Apply status filter: `Active`
+4. Verify further filtering applied
+5. Locate clear filters button: `data-testid="clear-filters"`
+6. Click clear filters
+7. Wait for table reset
 
 **Expected Results:**
 - All filters cleared
-- Full items list shown
+- All 5 items visible again
 - Search input empty
 - Status filter reset to "All"
 
 **Assertions:**
 - Search input value is empty
 - Status filter shows "All"
-- All items visible again
+- Exactly 5 items visible (their created items)
+
+---
+
+#### **EDITOR Testing**
+
+**Preconditions:**
+- User logged in as editor
+- **Data Setup:** ✅ REQUIRED
+  - Before test: Check if editor has 5 items
+  - If NO → Create 5 items for editor
+  - If YES → Reuse them
+- User on `/items` page
+
+**Test Steps:**
+1. Apply search filter: `TC-LIST-006` (to show items)
+2. Verify filtered results shown (should show 5 items)
+3. Apply status filter: `Active`
+4. Verify further filtering applied
+5. Locate clear filters button: `data-testid="clear-filters"`
+6. Click clear filters
+7. Wait for table reset
+
+**Expected Results:**
+- All filters cleared
+- All 5 editor's items visible again (isolated by created_by)
+- Search input empty
+- Status filter reset to "All"
+- No admin items visible
+
+**Assertions:**
+- Search input value is empty
+- Status filter shows "All"
+- Exactly 5 items visible (only editor's items)
+
+---
+
+#### **VIEWER Testing**
+
+**Preconditions:**
+- User logged in as viewer
+- **Data Setup:** ❌ NOT NEEDED!
+  - Uses items created by admin/editor
+- User on `/items` page
+
+**Test Steps:**
+1. Apply search filter: `Test` or similar
+2. Verify filtered results shown
+3. Apply status filter: `Active`
+4. Verify further filtering applied
+5. Locate clear filters button: `data-testid="clear-filters"`
+6. Click clear filters
+7. Wait for table reset
+
+**Expected Results:**
+- All filters cleared
+- All org items visible again (admin + editor items)
+- Search input empty
+- Status filter reset to "All"
+- No filtering applied
+
+**Assertions:**
+- Search input value is empty
+- Status filter shows "All"
+- Multiple items visible (all org items)
+- Items from both admin and editor visible
+
+---
+
+**Summary:**
+| Role | Setup? | Sees Before Clear | Sees After Clear |
+|------|--------|-------------------|------------------|
+| ADMIN | ✅ YES | 5 filtered items | All 5 items |
+| EDITOR | ✅ YES | 5 filtered items | All 5 items (own only) |
+| VIEWER | ❌ NO | Filtered org items | All org items |
 
 ---
 

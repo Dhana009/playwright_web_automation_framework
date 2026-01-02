@@ -1,0 +1,18 @@
+{
+  "cookies": [
+    {
+      "name": "refreshToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTU3NzJjYjg3ZjUwMzNhZGE3YmNiODMiLCJlbWFpbCI6ImVkaXRvcjJAdGVzdC5jb20iLCJ0eXBlIjoicmVmcmVzaCIsImlhdCI6MTc2NzM3NjM1OCwiZXhwIjoxNzY3OTgxMTU4fQ.VcKQ9paEXrEL-vrbuvd6yRv6csLczdCaEvlUiu4B4eQ",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1767981158.865591,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [],
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTU3NzJjYjg3ZjUwMzNhZGE3YmNiODMiLCJlbWFpbCI6ImVkaXRvcjJAdGVzdC5jb20iLCJyb2xlIjoiRURJVE9SIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc2NzM3NjM1OSwiZXhwIjoxNzY3Mzc3MjU5fQ.etrNh1bjNr6FDkHuAUa3UAzDA0AvecBdNMWaFERyNlo",
+  "user_email": "editor2@test.com",
+  "expires_at": "2026-01-09T23:22:39.398774"
+}
